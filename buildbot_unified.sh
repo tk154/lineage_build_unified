@@ -22,7 +22,6 @@ fi
 
 NOSYNC=false
 PERSONAL=false
-SIGNABLE=true
 for var in "${@:2}"
 do
     if [ ${var} == "nosync" ]
@@ -32,14 +31,8 @@ do
     if [ ${var} == "personal" ]
     then
         PERSONAL=true
-        SIGNABLE=false
     fi
 done
-if [ ! -d "$HOME/.android-certs" ]; then
-    read -n1 -r -p $"\$HOME/.android-certs not found - CTRL-C to exit, or any other key to continue"
-    echo ""
-    SIGNABLE=false
-fi
 
 # Abort early on error
 set -eE
@@ -125,15 +118,6 @@ build_treble() {
     lunch lineage_${TARGET}-${aosp_target_release}-userdebug
     make installclean
     make -j$(nproc) systemimage
-    SIGNED=false
-    if [ ${SIGNABLE} = true ] && [[ ${TARGET} == *_bg? ]]
-    then
-        make -j$(lscpu -b -p=Core,Socket | grep -v '^#' | sort -u | wc -l) target-files-package otatools
-        bash ./lineage_build_unified/sign_target_files.sh $OUT/signed-target_files.zip
-        unzip -joq $OUT/signed-target_files.zip IMAGES/system.img -d $OUT
-        SIGNED=true
-        echo ""
-    fi
     #make vndk-test-sepolicy
 }
 
