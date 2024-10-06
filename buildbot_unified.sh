@@ -61,12 +61,11 @@ prep_build() {
     echo ""
 
     echo "Syncing repos"
-    repo sync -c --force-sync --no-clone-bundle --no-tags -j$(nproc --all)
+    repo sync -c --force-sync --no-clone-bundle --no-tags -j$(nproc)
     echo ""
 
     echo "Setting up build environment"
     source build/envsetup.sh &> /dev/null
-    mkdir -p ~/build-output
     echo ""
 
     repopick -t 13-burnin -r -f
@@ -111,7 +110,6 @@ finalize_treble() {
 
 build_device() {
     brunch ${1}
-    mv $OUT/lineage-*.zip ~/build-output/lineage-20.0-$BUILD_DATE-UNOFFICIAL-${1}$($PERSONAL && echo "-personal" || echo "").zip
 }
 
 build_treble() {
@@ -126,7 +124,7 @@ build_treble() {
     esac
     lunch lineage_${TARGET}-userdebug
     make installclean
-    WITH_ADB_INSECURE=true make -j$(lscpu -b -p=Core,Socket | grep -v '^#' | sort -u | wc -l) systemimage
+    WITH_ADB_INSECURE=true make -j$(nproc) systemimage
     SIGNED=false
     if [ ${SIGNABLE} = true ] && [[ ${TARGET} == *_bg? ]]
     then
@@ -136,7 +134,6 @@ build_treble() {
         SIGNED=true
         echo ""
     fi
-    mv $OUT/system.img ~/build-output/lineage-20.0-$BUILD_DATE-UNOFFICIAL-${TARGET}$(${PERSONAL} && echo "-personal" || echo "")$(${SIGNED} && echo "-signed" || echo "").img
     #make vndk-test-sepolicy
 }
 
@@ -172,7 +169,6 @@ do
     echo "Starting $(${PERSONAL} && echo "personal " || echo "")build for ${MODE} ${var}"
     build_${MODE} ${var}
 done
-ls ~/build-output | grep 'lineage' || true
 
 END=`date +%s`
 ELAPSEDM=$(($(($END-$START))/60))
