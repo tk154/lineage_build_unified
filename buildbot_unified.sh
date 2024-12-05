@@ -126,7 +126,7 @@ build_treble() {
     esac
     lunch lineage_${TARGET}-userdebug
     make installclean
-    make -j$(lscpu -b -p=Core,Socket | grep -v '^#' | sort -u | wc -l) systemimage
+    WITH_ADB_INSECURE=true make -j$(lscpu -b -p=Core,Socket | grep -v '^#' | sort -u | wc -l) systemimage
     SIGNED=false
     if [ ${SIGNABLE} = true ] && [[ ${TARGET} == *_bg? ]]
     then
